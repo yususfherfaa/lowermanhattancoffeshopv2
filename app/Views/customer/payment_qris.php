@@ -225,6 +225,15 @@ body {
     line-height: 1.5;
     margin-top: var(--sp-5);
 }
+.qris-demo-banner {
+    background: #a63d2f;
+    color: #fff;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+}
 @media (max-width: 480px) {
     .container-customer {
         padding-left: 12px;
@@ -330,27 +339,43 @@ body {
 
         <div class="qris-header">
             <div class="close-btn"><a href="<?= base_url('cart/'.$order['id_meja']) ?>" aria-label="Kembali ke keranjang">×</a></div>
-            <h2>QRIS</h2>
+            <h2><?= $is_demo ? 'Kode QR Demo' : 'Pembayaran QRIS' ?></h2>
         </div>
 
         <div class="merchant-box">
-            <div class="name"><?= esc($merchant_name) ?>, <?= esc(ucwords(strtolower($merchant_address))) ?></div>
-            <div class="address">Jl. Kaliabang No.8, Perwira, Bekasi Utara, Kota Bekasi, Jawa Barat</div>
-            <div class="nmid">NMID: ID102435780413</div>
+            <div class="name"><?= esc($nama_toko) ?></div>
+            <?php if (!empty($alamat_lengkap)): ?>
+                <div class="address"><?= esc($alamat_lengkap) ?></div>
+            <?php endif; ?>
+            <?php if (!empty($nmid) && !$is_demo): ?>
+                <div class="nmid">NMID: <?= esc($nmid) ?></div>
+            <?php endif; ?>
         </div>
 
+        <?php if ($is_demo): ?>
+            <div class="qris-demo-banner">MODE DEMO - bukan pembayaran sungguhan</div>
+        <?php endif; ?>
+
         <div class="qris-amount">
-            <small>Total pembayaran</small>
+            <small><?= $is_demo ? 'Total pesanan (simulasi)' : 'Total pembayaran' ?></small>
             Rp <?= number_format($order['total'], 0, ',', '.') ?>
         </div>
 
         <div class="qris-frame">
             <div class="brand"><span class="q">Q</span><span class="r">R</span><span class="i">I</span><span class="s">S</span></div>
-            <img src="<?= base_url($qris) ?>" alt="QRIS Barcode" onerror="this.src='<?= base_url('uploads/qris-placeholder.svg') ?>'">
+            <img src="<?= base_url($qris) ?>"
+                width="2048"
+                height="2896"
+                alt="<?= $is_demo ? 'Kode QR demo untuk Lower Manhattan Coffee Shop' : 'Kode QR pembayaran untuk ' . esc($nama_toko) ?>"
+                onerror="this.src='<?= base_url('uploads/qris-placeholder.svg') ?>'">
         </div>
 
         <p class="qris-instructions">
-            Scan kode QRIS di atas dan bayarkan sesuai total pesanan. Setelah membayar, silakan tunggu kasir memverifikasi pembayaran.
+            <?php if ($is_demo): ?>
+                Kode ini berisi teks demonstrasi dan tidak dapat digunakan untuk membayar.
+            <?php else: ?>
+                Scan kode QR di atas dan bayarkan sesuai total pesanan. Setelah membayar, silakan tunggu kasir memverifikasi pembayaran.
+            <?php endif; ?>
         </p>
 
         <div class="qris-notice">
@@ -366,7 +391,7 @@ body {
 </div>
 
 <footer style="text-align:center; padding:var(--sp-8); color:var(--taupe); font-size:var(--fs-sm);">
-    © <?= date('Y') ?> <?= esc(setting('nama_warkop') ?? 'Lower Manhattan Coffee Shop') ?>
+    © <?= date('Y') ?> <?= esc($nama_toko) ?>
 </footer>
 
 <script src="<?= base_url('assets/theme.js') ?>"></script>
