@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Struk Pembayaran #<?= esc($order['id_order']) ?> — <?= esc(setting('nama_warkop') ?? 'Warkop Bahagia') ?></title>
+<title>Struk Pembayaran #<?= esc($order['id_order']) ?> — <?= esc(setting('nama_warkop') ?? 'Lower Manhattan Coffee Shop') ?></title>
 <style>
 /* TAMPILAN KERTAS STRUK THERMAL MODERN */
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
@@ -140,9 +140,9 @@ td {
 <div class="receipt-wrapper">
 
     <div class="receipt-header">
-        <h2><?= esc(setting('nama_warkop') ?? 'WARKOP BAHAGIA') ?></h2>
-        <p><?= esc(setting('alamat') ?? 'Jl. Bahagia Selalu No. 1') ?></p>
-        <p><?= esc(setting('kontak') ?? '0812-3456-7890') ?></p>
+        <h2><?= esc(setting('nama_warkop') ?? 'Lower Manhattan Coffee Shop') ?></h2>
+        <p><?= esc(setting('alamat') ?? 'Lower Manhattan, New York') ?></p>
+        <p><?= esc(setting('kontak') ?? '-') ?></p>
     </div>
 
     <hr class="dashed-line">
@@ -161,8 +161,25 @@ td {
         <?php foreach($items as $i): ?>
         <tr>
             <td>
-                <?= esc($i['nama']) ?><br>
-                <small style="color:#8B6B4F;"><?= (int) $i['qty'] ?> x Rp <?= number_format($i['harga'], 0, ',', '.') ?></small>
+                <?php
+                    $ukuranLabel = catalog_product_size_label($i);
+                    $namaMenu = catalog_product_display_name($i);
+                ?>
+                <?= esc($namaMenu) ?>
+                <?php if ($ukuranLabel !== null): ?>
+                    <br><small style="color:#8B6B4F;">Ukuran: <?= esc($ukuranLabel) ?></small>
+                <?php endif; ?>
+                <?php if (!empty($i['opsi'])): ?>
+                    <br><small style="color:#8B6B4F;">Varian: <?= esc($i['opsi']) ?></small>
+                <?php endif; ?>
+                <?php if (!empty($i['catatan'])): ?>
+                    <br><small style="color:#8B6B4F;">Catatan: <?= esc($i['catatan']) ?></small>
+                <?php endif; ?>
+                <?php if (!empty($i['suhu'])): ?>
+                    <br><small style="color:#8B6B4F;"><?= $i['suhu'] === 'panas' ? 'Panas' : 'Es' ?></small>
+                <?php endif; ?>
+                <br>
+                    <small style="color:#8B6B4F;"><?= (int) $i['qty'] ?> x Rp <?= number_format($i['harga'], 0, ',', '.') ?></small>
             </td>
             <td class="text-right">
                 Rp <?= number_format($i['subtotal'], 0, ',', '.') ?>

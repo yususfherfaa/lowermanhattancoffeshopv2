@@ -1,6 +1,6 @@
-# Warkop Bahagia
+# Lower Manhattan Coffee Shop
 
-Aplikasi pemesanan dan kasir berbasis CodeIgniter 4 dengan API rekomendasi menu berbasis waktu menggunakan Flask dan KNN.
+Aplikasi pemesanan dan kasir berbasis CodeIgniter 4 untuk katalog Maven Roasters, dilengkapi rekomendasi waktu dari transaksi Lower Manhattan.
 
 ## Kebutuhan
 
@@ -44,24 +44,59 @@ Di Linux/macOS, gunakan `source .venv/bin/activate`. Flask mendengarkan di `127.
 - `public/` — entry point web, aset statis, dan direktori upload runtime.
 - `writable/` — cache, log, sesi, dan berkas runtime CodeIgniter.
 
-## Hasil evaluasi ML
+## Dataset Publik & Sistem Rekomendasi (Plan B)
 
-Angka berikut berasal dari `ml/hasil_evaluasi.txt`. Evaluasi memakai dataset uji yang tercatat dan tidak menjamin performa pada transaksi produksi. Lingkungan: Python 3.12.6, scikit-learn 1.8.0, pandas 2.2.3, numpy 2.1.3, joblib 1.5.3, matplotlib 3.10.9. Dataset berisi 9.017 baris (7.180 latih, 1.837 uji), dengan 279 konteks waktu; K optimum yang tercatat adalah 200.
+Sistem rekomendasi menu menggunakan dataset publik bertema coffee shop:
+- **Nama Dataset**: Coffee Shop Sales (Maven Roasters)
+- **Sumber**: [Maven Analytics Data Playground](https://mavenanalytics.io/data-playground/coffee-shop-sales) (Public Domain).
+- **Ruang lingkup penelitian**: hanya transaksi `Lower Manhattan` (`store_id = 5`); dataset sumber tetap 149.116 baris, subset cabang berisi 47.782 transaksi.
+- **Katalog**: 80 produk dalam sembilan kategori: Bakery, Branded, Coffee, Coffee beans, Drinking Chocolate, Flavours, Loose Tea, Packaged Chocolate, dan Tea.
+- **Pilihan ukuran**: produk dataset dengan ukuran Small/Regular/Large (misalnya Brazilian) ditampilkan sebagai satu menu dengan pilihan ukuran. Harga, stok, dan ID transaksi tiap ukuran tetap mengikuti baris dataset; ukuran yang tidak tersedia tidak dibuat-buat. Manajemen menu kasir dan laporan stok admin juga menampilkan ukuran-ukuran itu dalam satu kelompok.
+- **Logo**: aplikasi memakai file logo Manhattan Coffee yang diberikan pengguna, tersimpan di `public/uploads/manhattan-coffee-shop-logo.png`; migrasi `UseProvidedCoffeeShopLogo` memperbarui pengaturan logo database.
+- **Gambar menu**: foto produk minuman yang tersedia di proyek dipakai untuk kategori terkait; kategori tanpa foto sumber memakai ilustrasi lokal. Dataset Maven tidak menyertakan foto produk.
+- **Lokasi Berkas Mentah**: `dataset/Coffee Shop Sales.xlsx` (diabaikan dari commit git jika > 8 MB).
 
-| Metode | Precision@5 | Recall@5 | Hit Rate@5 |
-| --- | ---: | ---: | ---: |
-| KNN | 0.271 | 0.249 | 0.771 |
-| Terlaris Jam | 0.300 | 0.270 | 0.789 |
-| Terlaris Segmen | 0.299 | 0.278 | 0.803 |
-| Rule Manual | 0.306 | 0.279 | 0.799 |
-| Terlaris Global | 0.212 | 0.185 | 0.624 |
-| Acak | 0.125 | 0.116 | 0.473 |
+## Pipeline Tunggal Ujung-ke-Ujung (End-to-End)
 
-Bootstrap 95% (2.000 iterasi, seed 42) mencatat selisih Precision@5 KNN terhadap terlaris jam −0.029 (CI −0.047 s.d. −0.011), terlaris segmen −0.028 (−0.047 s.d. −0.009), rule manual −0.035 (−0.058 s.d. −0.013), terlaris global +0.059 (+0.032 s.d. +0.085), dan acak +0.146 (+0.118 s.d. +0.176). Sebagian data sintetis memakai bobot awal dari aturan pemilik.
+Untuk menjalankan seluruh rangkaian pra-pemrosesan data, pelatihan model KNN (3 tugas), evaluasi ilmiah, ekspor tabel/grafik jurnal, dan pembuatan berkas SQL:
 
-## Data sintetis dan batas klaim
+```sh
+python ml/run_all.py
+```
 
-Dataset dibuat oleh `ml/generate_dataset.py`, bukan dikumpulkan dari transaksi pelanggan. Generator mensimulasikan 60 hari mulai 2026-08-03 dengan seed 42, intensitas pesanan Poisson berdasarkan jam, 12% pilihan menu acak, bobot menu dari aturan pemilik, dan percampuran bobot di sekitar pergantian segmen waktu. Karena aturan pemilik ikut membentuk data sintetis, skor terhadap rule manual bersifat sirkular. Hasil evaluasi hanya menggambarkan simulasi tersebut; hasilnya tidak membuktikan dampak pada penjualan nyata. Pada evaluasi tercatat, KNN berada di bawah baseline terlaris per jam, terlaris per segmen, dan rule manual pada Precision@5.
+## Sinkronisasi Katalog Dataset
+
+Setelah pipeline menghasilkan file SQL terbaru, jalankan migrasi dan seed untuk mengganti katalog aktif serta mengisi ulang agregat analitik Lower Manhattan. Produk katalog lama dinonaktifkan, bukan dihapus, agar relasi transaksi historis tetap tersimpan.
+
+```sh
+php spark migrate
+php spark db:seed KatalogMavenSeeder
+```
+
+Gunakan `php spark db:seed MenuMinumanSeeder` sebagai nama seeder lama yang kini menjalankan sinkronisasi katalog yang sama. Hasil training terbaru ada di `ml/metadata.json`, sedangkan ringkasan kualitas data ada di `docs/laporan_kualitas_data.md`.
+
+## Menghapus riwayat penjualan lama
+
+Untuk mengosongkan transaksi penjualan lama tanpa menghapus akun admin/kasir atau katalog, pastikan `.env` menunjuk ke database aplikasi yang benar, buat cadangan database, lalu jalankan:
+
+```sh
+php spark db:seed HapusRiwayatPenjualanSeeder
+```
+
+Seeder ini menghapus baris pesanan, item pesanan, pembayaran, dan notifikasi yang terkait secara transaksional. Seeder tidak menghapus pengguna, produk, pengaturan, data analitik produk, ataupun log rekomendasi. Operasi ini menghapus riwayat secara permanen pada database aktif.
+
+## Hasil Evaluasi Terbaru
+
+Hasil berikut dihitung dari 47.782 transaksi Lower Manhattan, bukan gabungan cabang:
+- **Klasifikasi kategori (KNN)**: akurasi 34,89%; baseline kelas mayoritas 38,10%; Top-3 hit rate 78,83%.
+- **Prediksi transaksi per jam (KNN)**: MAE 6,12 transaksi; baseline per jam 7,42; R² 0,619 (baseline 0,417).
+- **Hubungan kategori dengan segmen waktu**: Cramér's V 0,0335, asosiasi sangat lemah.
+
+Nilai eksperimen dapat berubah saat pipeline dilatih ulang. `ml/metadata.json` dan dokumen hasil pipeline merupakan sumber angka terbaru.
+
+## Batasan sumber foto
+
+Dataset transaksi Maven tidak menyertakan foto produk. File foto yang memang tersedia di proyek dipasangkan ke kategori yang sesuai; kategori tanpa foto sumber menggunakan ilustrasi lokal, bukan foto produk fiktif.
 
 Untuk menjalankan prototipe fase 2 dari root proyek, gunakan seed dan direktori keluaran berikut:
 

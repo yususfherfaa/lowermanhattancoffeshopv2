@@ -9,19 +9,26 @@ use App\Models\SettingModel;
 class Menu extends BaseController
 {
     private const KATEGORI_TETAP = [
-        'Kopi Panas',
-        'Es Kopi',
-        'Es Nutrisari',
-        'Minuman Non Kopi',
-        'Makanan Berat',
-        'Cemilan',
-        'Minuman Kopi',
+        'Bakery',
+        'Branded',
+        'Coffee',
+        'Coffee beans',
+        'Drinking Chocolate',
+        'Flavours',
+        'Loose Tea',
+        'Packaged Chocolate',
+        'Tea',
     ];
 
     private function normalizeKategori($kategori)
     {
         $kategori = trim((string) $kategori);
         return in_array($kategori, self::KATEGORI_TETAP, true) ? $kategori : '';
+    }
+
+    private function isDrinkCategory(string $kategori): bool
+    {
+        return in_array($kategori, ['Coffee', 'Drinking Chocolate', 'Tea'], true);
     }
 
     private function getKategoriSuggestions(ProductModel $productModel): array
@@ -36,7 +43,7 @@ class Menu extends BaseController
             'kategori' => 'required|in_list[' . implode(',', self::KATEGORI_TETAP) . ']',
             'harga' => 'required|numeric|greater_than_equal_to[0]',
             'stok' => 'required|integer|greater_than_equal_to[0]',
-            'deskripsi' => 'permit_empty|string|max_length[255]',
+            'deskripsi' => 'required|string|max_length[255]',
             'tambahan_harga_es' => 'permit_empty|numeric|greater_than_equal_to[0]',
         ];
         $gambar = $this->request->getFile('gambar');
@@ -74,7 +81,7 @@ class Menu extends BaseController
         return view('kasir/menu/index', [
             'products' => $builder->findAll(),
             'kategori_suggestions' => $this->getKategoriSuggestions($productModel),
-            'nama_warkop' => $settings['nama_warkop'] ?? 'Warkop Bahagia'
+            'nama_warkop' => $settings['nama_warkop'] ?? 'Lower Manhattan Coffee Shop'
         ]);
     }
 
@@ -92,7 +99,7 @@ class Menu extends BaseController
         if ($kategori === '') {
             return redirect()->back()->with('error', 'Pilih kategori menu yang tersedia.');
         }
-        $isDrink = !in_array($kategori, ['Makanan Berat', 'Cemilan'], true);
+        $isDrink = $this->isDrinkCategory($kategori);
         $varianSuhu = $isDrink && (bool) $this->request->getPost('varian_suhu');
         $suhuTetap = $isDrink ? ($this->request->getPost('suhu_tetap') ?? '') : '';
         if (!in_array($suhuTetap, ['', 'panas', 'dingin'], true)) {
@@ -118,14 +125,11 @@ class Menu extends BaseController
             $file->move(FCPATH . 'uploads', $gambar);
         }
 
-        // Generate ID Produk
-        $lastProduk = $db->query('SELECT id_produk FROM products ORDER BY id_produk DESC LIMIT 1 FOR UPDATE')->getRowArray();
-
-        if ($lastProduk) {
-            $num = (int) substr($lastProduk['id_produk'], 3) + 1;
-        } else {
-            $num = 1;
-        }
+        $lastProductNumber = $db->query(
+            "SELECT MAX(CAST(SUBSTRING(id_produk, 4) AS UNSIGNED)) AS max_num
+             FROM products WHERE id_produk REGEXP '^PRD[0-9]{7}$' FOR UPDATE"
+        )->getRowArray();
+        $num = (int) ($lastProductNumber['max_num'] ?? 0) + 1;
 
         $id_produk = 'PRD' .
             str_pad($num, 7, '0', STR_PAD_LEFT);
@@ -206,7 +210,7 @@ class Menu extends BaseController
         if ($kategori === '') {
             return redirect()->back()->with('error', 'Pilih kategori menu yang tersedia.');
         }
-        $isDrink = !in_array($kategori, ['Makanan Berat', 'Cemilan'], true);
+        $isDrink = $this->isDrinkCategory($kategori);
         $varianSuhu = $isDrink && (bool) $this->request->getPost('varian_suhu');
         $suhuTetap = $isDrink ? ($this->request->getPost('suhu_tetap') ?? '') : '';
         if (!in_array($suhuTetap, ['', 'panas', 'dingin'], true)) {

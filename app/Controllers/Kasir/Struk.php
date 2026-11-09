@@ -44,7 +44,7 @@ class Struk extends BaseController
             'payment' => $payment,
             'items' => $items,
 
-            'nama_warkop' => $settings['nama_warkop'] ?? 'Warkop Bahagia',
+            'nama_warkop' => $settings['nama_warkop'] ?? 'Lower Manhattan Coffee Shop',
             'alamat' => $settings['alamat'] ?? '-',
             'kontak' => $settings['kontak'] ?? '-',
         ];

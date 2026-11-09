@@ -1,7 +1,7 @@
 """
 generate_dataset.py
 ===================
-Generator dataset sintetis pola pemesanan Warkop Bahagia berbasis waktu.
+Generator dataset sintetis pola pemesanan Lower Manhattan Coffee Shop berbasis waktu.
 Dibuat sesuai spesifikasi PR-01 untuk menggantikan dataset lama yang berlabel sirkular.
 
 Parameter Simulasi:
@@ -34,7 +34,7 @@ import pandas as pd
 
 BASE_ML = os.path.dirname(os.path.abspath(__file__))
 
-# ── 1. DEFINISI KATALOG MENU (41 MENU AKTIF WARKOP BAHAGIA) ───────────────────
+# ── 1. DEFINISI KATALOG MENU (41 PRODUK COFFEE SHOP) ─────────────────────────
 MENU = {
     'PRD0000001': ('Nasi Goreng', 'Makanan Berat', 16000),
     'PRD0000002': ('Indomie Goreng Telor', 'Makanan Berat', 14000),

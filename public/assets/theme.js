@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   WARKOP BAHAGIA — THEME INTERACTIONS (theme.js)
+   LOWER MANHATTAN COFFEE SHOP — THEME INTERACTIONS (theme.js)
    Animations, reveal, ripple, toast, count-up, scroll-top, etc.
    ═══════════════════════════════════════════════════════════════ */
 
@@ -100,7 +100,7 @@
     }
 
     // ── TOAST SYSTEM ────────────────────────────────────────────
-    window.WarkopToast = {
+    window.CoffeeShopToast = {
         container: null,
         init: function () {
             if (this.container) return;
@@ -181,7 +181,7 @@
     }
 
     // ── CONFETTI (for order success page) ───────────────────────
-    window.WarkopConfetti = function () {
+    window.CoffeeShopConfetti = function () {
         if (prefersReduced) return;
         var colors = ['#C47F5E', '#D9A99A', '#D4B896', '#8FA68A', '#D9A441', '#B08F6E'];
         for (var i = 0; i < 40; i++) {
@@ -202,7 +202,7 @@
     };
 
     // ── GREETING BASED ON TIME ──────────────────────────────────
-    window.WarkopGreeting = function () {
+    window.CoffeeShopGreeting = function () {
         var hour = new Date().getHours();
         if (hour >= 5 && hour < 11)  return { text: 'Selamat pagi', emoji: '☀️', icon: 'sunrise' };
         if (hour >= 11 && hour < 15) return { text: 'Selamat siang', emoji: '🌤️', icon: 'sun' };
@@ -211,7 +211,7 @@
     };
 
     // ── CART BADGE BOUNCE ───────────────────────────────────────
-    window.WarkopCartBounce = function () {
+    window.CoffeeShopCartBounce = function () {
         var badge = document.querySelector('.cart-badge');
         if (!badge || prefersReduced) return;
         badge.style.animation = 'none';

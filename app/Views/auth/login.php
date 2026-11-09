@@ -12,6 +12,10 @@
 
     <!-- LEFT: Illustration -->
     <div class="login-illustration">
+        <img class="login-brand-logo"
+             src="<?= base_url($logo) ?>"
+             alt="Logo Lower Manhattan Coffee Shop">
+
         <!-- Coffee cup SVG with steam -->
         <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
             <!-- Steam -->
@@ -29,7 +33,7 @@
 
         <div class="tagline">
             <span><?= esc($nama_warkop) ?></span>
-            ngopi tenang, pesan gampang
+            An exquisite coffee experience, crafted for the discerning.
         </div>
     </div>
 
@@ -38,8 +42,8 @@
 
         <div style="display:flex; justify-content:center; margin-bottom:16px;">
             <img src="<?= base_url($logo) ?>"
-                 style="width:80px; height:80px; object-fit:cover; border-radius:50%; border:3px solid var(--nude);"
-                 alt="Logo Warkop">
+                 style="width:180px; height:110px; object-fit:contain; border-radius:8px; border:2px solid var(--nude); background:#fff;"
+                 alt="Logo Lower Manhattan Coffee Shop">
         </div>
 
         <h2>Selamat Datang</h2>

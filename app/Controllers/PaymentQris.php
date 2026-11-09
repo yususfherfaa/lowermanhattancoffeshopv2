@@ -25,14 +25,14 @@ class PaymentQris extends BaseController
             return $this->response->setStatusCode(403)->setBody('Akses pesanan tidak valid.');
         }
 
-        $merchantName = trim((string) (setting('nama_warkop') ?? 'Warkop Bahagia'));
+        $merchantName = trim((string) (setting('nama_warkop') ?? 'Lower Manhattan Coffee Shop'));
         $merchantAddress = trim((string) (setting('alamat') ?? 'Bekasi Utara'));
         $qris = trim((string) (setting('qris') ?? 'uploads/qris-placeholder.svg'));
 
         return view('customer/payment_qris', [
             'order' => $order,
             'id_meja' => $id_meja,
-            'merchant_name' => $merchantName ?: 'Warkop Bahagia',
+            'merchant_name' => $merchantName ?: 'Lower Manhattan Coffee Shop',
             'merchant_address' => $merchantAddress ?: 'Bekasi Utara',
             'qris' => $qris ?: 'uploads/qris-placeholder.svg',
             'order_token' => $order['token'],

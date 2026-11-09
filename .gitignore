@@ -54,19 +54,23 @@ __pycache__/
 
 # Local Python environments and generated build output
 .venv/
+.venv-ml/
 venv/
 /builds/
 
 # Database exports and recovery dumps (keep schema and migration SQL)
 *.sql
 !/database/*.sql
+!/database/planB/02_seed_katalog.sql
 *.sql.dump
 *.sql.gz
 *.backup.sql
 
-# Runtime uploads are local; retain SVG placeholders only
+# Runtime uploads are local; retain SVG placeholders and seeded product photos
 /public/uploads/*
 !/public/uploads/*.svg
+!/public/uploads/foto-produk-*.jpg
+!/public/uploads/foto-produk-*.webp
 
 # The real QRIS image contains payment destination details.
 /public/uploads/qris.png

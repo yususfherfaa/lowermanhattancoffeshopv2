@@ -23,13 +23,13 @@ class Auth extends BaseController
         $data = [
             'msg' => session()->getFlashdata('msg'),
 
-            'nama_warkop' => $settings['nama_warkop'] ?? 'Warkop Bahagia',
+            'nama_warkop' => 'Lower Manhattan Coffee Shop',
 
             'alamat' => $settings['alamat'] ?? 'Alamat belum diatur',
 
             'kontak' => $settings['kontak'] ?? '-',
 
-            'logo' => $settings['logo'] ?? 'uploads/default-logo.png',
+            'logo' => $settings['logo'] ?? 'uploads/manhattan-coffee-shop-logo.png',
         ];
 
         return view('auth/login', $data);

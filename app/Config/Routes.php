@@ -27,9 +27,13 @@ $routes->get('/order/(:any)', 'Order::index/$1');
 
 $routes->get('/cart/add/(:any)/(:any)', 'Cart::add/$1/$2');
 
+$routes->post('/cart/note/(:any)/(:any)', 'Cart::note/$1/$2');
+
 $routes->get('/cart/qty/(:any)/(:any)/(:any)', 'Cart::qty/$1/$2/$3');
 
 $routes->get('/cart/remove/(:any)/(:any)', 'Cart::remove/$1/$2');
+
+$routes->get('cart/reset/(:segment)', 'Cart::reset/$1');
 
 $routes->get('/cart/(:any)', 'Cart::index/$1', ['filter' => 'honeypot']);
 
@@ -40,8 +44,6 @@ $routes->get('/payment-qris/(:segment)/(:segment)','PaymentQris::index/$1/$2');
 $routes->get('/order-success/(:any)/(:any)', 'OrderSuccess::index/$1/$2');
 
 $routes->get('/cek-status/(:segment)', 'OrderStatus::cek/$1');
-
-$routes->get('cart/reset/(:segment)', 'Cart::reset/$1');
 
 /*
 |--------------------------------------------------------------------------
@@ -72,6 +74,8 @@ $routes->get('/laporan-stok/pdf', 'Admin\LaporanStok::pdf', ['filter' => ['auth'
 $routes->group('admin', ['filter' => ['auth', 'role:admin']], static function ($routes) {
     $routes->get('dashboard', 'Admin\Dashboard::index');
     $routes->get('recommendation-acceptance', 'Admin\RecommendationAcceptance::index');
+    $routes->get('analitik-penjualan', 'Admin\AnalitikPenjualan::index');
+    $routes->get('evaluasi-model', 'Admin\EvaluasiModel::index');
 
     $routes->get('kasir', 'Admin\Kasir::index');
     $routes->get('kasir/list', 'Admin\Kasir::index');

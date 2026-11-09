@@ -13,11 +13,18 @@ final class FlaskRecommendationClient
     }
 
     /** Return a valid Flask response, or null when Flask is unavailable/bad. */
-    public function fetch(?int $hour = null): ?array
+    public function fetch(?int $hour = null, ?int $minute = null): ?array
     {
         $url = 'http://127.0.0.1:5001/api/rekomendasi';
+        $query = [];
         if ($hour !== null) {
-            $url .= '?jam=' . $hour;
+            $query['jam'] = $hour;
+        }
+        if ($minute !== null) {
+            $query['menit'] = $minute;
+        }
+        if ($query !== []) {
+            $url .= '?' . http_build_query($query);
         }
 
         if ($this->transport !== null) {

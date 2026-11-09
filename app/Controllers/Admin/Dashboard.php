@@ -22,18 +22,21 @@ class Dashboard extends BaseController
            STATISTIK HARI INI
         ====================== */
 
+        $todayStart = date('Y-m-d 00:00:00');
+        $tomorrowStart = date('Y-m-d 00:00:00', strtotime('+1 day'));
+
         $total_pesanan = $db->table('payments')
             ->selectCount('id_order')
-            ->where('created_at >=', date('Y-m-d 00:00:00'))
-            ->where('created_at <', date('Y-m-d 23:59:59'))
+            ->where('created_at >=', $todayStart)
+            ->where('created_at <', $tomorrowStart)
             ->get()
             ->getRow()
             ->id_order;
 
         $total_pendapatan = $db->table('payments')
             ->selectSum('total_order')
-            ->where('created_at >=', date('Y-m-d 00:00:00'))
-            ->where('created_at <', date('Y-m-d 23:59:59'))
+            ->where('created_at >=', $todayStart)
+            ->where('created_at <', $tomorrowStart)
             ->get()
             ->getRow()
             ->total_order ?? 0;
@@ -66,13 +69,13 @@ class Dashboard extends BaseController
 
         $data = [
 
-            'nama_warkop' => $settings['nama_warkop'] ?? 'Warkop Bahagia',
+            'nama_warkop' => $settings['nama_warkop'] ?? 'Lower Manhattan Coffee Shop',
 
             'alamat' => $settings['alamat'] ?? 'Alamat belum diatur',
 
             'kontak' => $settings['kontak'] ?? '-',
 
-            'logo' => $settings['logo'] ?? 'uploads/default-logo.png',
+            'logo' => $settings['logo'] ?? 'uploads/manhattan-coffee-shop-logo.png',
 
             'total_pesanan' => $total_pesanan,
 

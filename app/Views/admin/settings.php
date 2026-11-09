@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Pengaturan Sistem — <?= esc(setting('nama_warkop') ?? 'Warkop Bahagia') ?></title>
+    <title>Pengaturan Sistem — <?= esc(setting('nama_warkop') ?? 'Lower Manhattan Coffee Shop') ?></title>
     <link rel="stylesheet" href="<?= base_url('assets/theme.css') ?>">
     <style>
         .setting-box {
@@ -110,11 +110,16 @@
     <div class="setting-box">
 
         <h2 style="text-align:left; margin-bottom:var(--sp-2);">Pengaturan Sistem</h2>
-        <p class="text-muted" style="margin-bottom:var(--sp-6);">Sesuaikan identitas warkop, alamat, kontak, dan gambar QRIS pembayaran.</p>
+        <p class="text-muted" style="margin-bottom:var(--sp-6);">Sesuaikan identitas coffee shop, alamat, kontak, dan gambar QRIS pembayaran.</p>
 
         <?php if(session()->getFlashdata('success')): ?>
             <div class="alert-success-beige">
-                ✓ <?= session()->getFlashdata('success') ?>
+                ✓ <?= esc(session()->getFlashdata('success')) ?>
+            </div>
+        <?php endif; ?>
+        <?php if(session()->getFlashdata('error')): ?>
+            <div role="alert" style="padding:10px;margin-bottom:16px;border-radius:8px;background:var(--brick-light);color:var(--brick);">
+                <?= esc(session()->getFlashdata('error')) ?>
             </div>
         <?php endif; ?>
 
@@ -123,7 +128,7 @@
               enctype="multipart/form-data">
 
             <div class="form-group">
-                <label>Nama Warkop</label>
+                <label>Nama Coffee Shop</label>
                 <input
                     type="text"
                     name="nama_warkop"
@@ -174,30 +179,31 @@
             </div>
 
             <div class="form-group">
-                <label>Logo Warkop</label>
+                <label>Logo Coffee Shop</label>
                 <div class="logo-preview-wrap">
                     <img
-                        src="<?= base_url($settings['logo'] ?? 'uploads/default-logo.png') ?>"
+                        src="<?= base_url($settings['logo'] ?? 'uploads/manhattan-coffee-shop-logo.png') ?>"
                         class="logo-preview"
                         id="logoPreview"
+                        style="width:200px;height:122px;object-fit:contain;background:#fff;"
                         alt="Logo">
                     <div>
                         <input
                             type="file"
                             name="logo"
                             class="form-control"
-                            accept="image/*"
+                            accept=".jpg,.jpeg,.png,.webp"
                             onchange="previewImg(this, 'logoPreview')">
-                        <small class="text-muted">Format JPG/PNG, rasio 1:1 direkomendasikan.</small>
+                        <small class="text-muted">JPG, PNG, atau WebP; maksimal 2 MB. Logo saat ini menggunakan rasio lanskap.</small>
                     </div>
                 </div>
             </div>
 
             <div class="form-group">
-                <label>QRIS Warkop (Untuk Pembayaran Non-Tunai)</label>
+                <label>QRIS Coffee Shop (Untuk Pembayaran Non-Tunai)</label>
                 <div class="logo-preview-wrap">
                     <img
-                        src="<?= base_url($settings['qris'] ?? 'uploads/qris.png') ?>"
+                        src="<?= base_url($settings['qris'] ?? 'uploads/qris-placeholder.svg') ?>"
                         class="logo-preview"
                         id="qrisPreview"
                         alt="QRIS">
@@ -206,9 +212,9 @@
                             type="file"
                             name="qris"
                             class="form-control"
-                            accept="image/*"
+                            accept=".jpg,.jpeg,.png,.webp"
                             onchange="previewImg(this, 'qrisPreview')">
-                        <small class="text-muted">Unggah gambar kode barcode QRIS toko Anda.</small>
+                        <small class="text-muted">JPG, PNG, atau WebP; maksimal 2 MB.</small>
                     </div>
                 </div>
             </div>
@@ -230,7 +236,7 @@
 </div>
 
 <footer style="text-align:center; padding:var(--sp-8); color:var(--taupe); font-size:var(--fs-sm);">
-    © <?= date('Y') ?> <?= esc($settings['nama_warkop'] ?? 'Warkop Bahagia') ?>
+    © <?= date('Y') ?> <?= esc($settings['nama_warkop'] ?? 'Lower Manhattan Coffee Shop') ?>
 </footer>
 
 <script src="<?= base_url('assets/theme.js') ?>"></script>

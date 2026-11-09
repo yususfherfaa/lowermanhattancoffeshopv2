@@ -29,23 +29,44 @@ class Order extends BaseController
         // PRODUK
         $productModel = new ProductModel();
 
+        $hasPlanBDataset = $db->fieldExists('kode_produk_dataset', 'products')
+            || $db->table('products')->like('id_produk', 'PRDM%')->countAllResults() > 0;
+
         $prodBuilder = $productModel->orderBy('nama', 'ASC');
         if ($db->fieldExists('aktif', 'products')) {
             $prodBuilder->where('aktif', 1);
         }
+
+        if ($hasPlanBDataset) {
+            $prodBuilder->like('id_produk', 'PRDM%');
+        }
+
         $products = $prodBuilder->findAll();
+
+        if (!$products && $hasPlanBDataset) {
+            $fallbackBuilder = $productModel->orderBy('nama', 'ASC');
+            if ($db->fieldExists('aktif', 'products')) {
+                $fallbackBuilder->where('aktif', 1);
+            }
+            $products = $fallbackBuilder->findAll();
+        }
+
         $categoryOrder = [
-            'Kopi Panas',
-            'Es Kopi',
-            'Es Nutrisari',
-            'Minuman Non Kopi',
-            'Makanan Berat',
-            'Cemilan',
-            'Minuman Kopi',
+            'Bakery',
+            'Branded',
+            'Coffee',
+            'Coffee beans',
+            'Drinking Chocolate',
+            'Flavours',
+            'Loose Tea',
+            'Packaged Chocolate',
+            'Tea',
         ];
         usort($products, static function (array $left, array $right) use ($categoryOrder): int {
-            $leftRank = array_search($left['kategori'], $categoryOrder, true);
-            $rightRank = array_search($right['kategori'], $categoryOrder, true);
+            $leftCategory = $left['kategori_dataset'] ?? $left['kategori'];
+            $rightCategory = $right['kategori_dataset'] ?? $right['kategori'];
+            $leftRank = array_search($leftCategory, $categoryOrder, true);
+            $rightRank = array_search($rightCategory, $categoryOrder, true);
             $leftRank = $leftRank === false ? count($categoryOrder) : $leftRank;
             $rightRank = $rightRank === false ? count($categoryOrder) : $rightRank;
             return $leftRank <=> $rightRank ?: strcasecmp($left['nama'], $right['nama']);
@@ -60,7 +81,7 @@ class Order extends BaseController
         }
         foreach ($products as &$product) {
             $product['options'] = $optionsByProduct[$product['id_produk']] ?? [];
-            if (in_array($product['kategori'], ['Makanan Berat', 'Cemilan'], true)) {
+            if (in_array($product['kategori_dataset'] ?? $product['kategori'], ['Bakery', 'Branded', 'Coffee beans', 'Flavours', 'Loose Tea', 'Packaged Chocolate'], true)) {
                 $product['label_opsi'] = 'Pilih varian';
             }
         }
@@ -85,7 +106,7 @@ class Order extends BaseController
 
             'nama_warkop' =>
                 $settings['nama_warkop']
-                ?? 'Warkop Bahagia',
+                ?? 'Lower Manhattan Coffee Shop',
 
             'alamat' =>
                 $settings['alamat']
@@ -97,7 +118,7 @@ class Order extends BaseController
 
             'logo' =>
                 $settings['logo']
-                ?? 'default-logo.png'
+                ?? 'uploads/manhattan-coffee-shop-logo.png'
         ];
 
         return view('customer/order', $data);

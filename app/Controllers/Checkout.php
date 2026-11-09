@@ -88,7 +88,10 @@ class Checkout extends BaseController
             }
 
             $item['id_produk'] = $product['id_produk'];
-            $item['nama'] = $product['nama'];
+            $productName = catalog_product_display_name($product);
+            $sizeLabel = catalog_product_size_label($product);
+            $item['nama'] = $productName . ($sizeLabel !== null ? ' - ' . $sizeLabel : '');
+            $item['ukuran_label'] = $sizeLabel;
             $item['kategori'] = $product['kategori'];
             $item['suhu'] = $suhu;
             $item['opsi'] = $option['nama_opsi'] ?? null;

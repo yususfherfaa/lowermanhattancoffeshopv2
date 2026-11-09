@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Pesanan Berhasil — <?= esc(setting('nama_warkop') ?? 'Warkop Bahagia') ?></title>
+    <title>Pesanan Berhasil — <?= esc(setting('nama_warkop') ?? 'Lower Manhattan Coffee Shop') ?></title>
     <link rel="stylesheet" href="<?= base_url('assets/theme.css') ?>">
     <style>
         .success-page-wrap {
@@ -78,11 +78,44 @@
             </div>
         </div>
 
+        <div style="text-align:left; margin:var(--sp-4) 0; padding:var(--sp-4); border:1px solid var(--sand); border-radius:var(--r-md); background:#fff;">
+            <strong>Rincian pesanan</strong>
+            <?php foreach ($items as $item): ?>
+            <div style="display:flex;justify-content:space-between;gap:12px;margin-top:10px;font-size:var(--fs-sm);">
+                <span>
+                    <?php
+                        $ukuranLabel = catalog_product_size_label($item);
+                        $namaMenu = catalog_product_display_name($item);
+                    ?>
+                    <?= esc($namaMenu) ?>
+                    <?php if ($ukuranLabel !== null): ?>
+                        <small style="display:block;color:var(--taupe);">Ukuran: <?= esc($ukuranLabel) ?></small>
+                    <?php endif; ?>
+                    <?php if (!empty($item['opsi'])): ?>
+                        <small style="display:block;color:var(--terracotta);">Varian: <?= esc($item['opsi']) ?></small>
+                    <?php endif; ?>
+                    <?php if (!empty($item['catatan'])): ?>
+                        <small style="display:block;color:var(--espresso);"><strong>Catatan:</strong> <?= esc($item['catatan']) ?></small>
+                    <?php endif; ?>
+                    <?php if (!empty($item['suhu'])): ?>
+                        <small style="display:block;color:var(--taupe);"><?= $item['suhu'] === 'panas' ? 'Panas' : 'Es' ?></small>
+                    <?php endif; ?>
+                    <small style="display:block;color:var(--taupe);"><?= (int) $item['qty'] ?> × Rp <?= number_format($item['harga'], 0, ',', '.') ?></small>
+                </span>
+                <strong>Rp <?= number_format($item['subtotal'], 0, ',', '.') ?></strong>
+            </div>
+            <?php endforeach; ?>
+            <div style="display:flex;justify-content:space-between;border-top:1px solid var(--sand);margin-top:12px;padding-top:10px;">
+                <strong>Total</strong>
+                <strong>Rp <?= number_format($order['total'], 0, ',', '.') ?></strong>
+            </div>
+        </div>
+
         <p style="color:var(--taupe); font-size:var(--fs-xs);">
-            Pesanan Anda segera diracik. Silakan bersantai menikmati suasana warkop! ☕
+            Pesanan Anda segera diracik. Silakan bersantai menikmati suasana coffee shop! ☕
         </p>
 
-        <a href="<?= base_url('/order/'.$id_meja) ?>" class="btn" style="width:100%; display:block; box-sizing:border-box; margin-top:var(--sp-4);">
+        <a href="<?= base_url('/order/'.$id_meja) ?>" class="btn btn-neutral" style="width:100%; display:block; box-sizing:border-box; margin-top:var(--sp-4);">
             ← Kembali ke Menu Meja
         </a>
 
@@ -91,14 +124,14 @@
 </div>
 
 <footer style="text-align:center; padding:var(--sp-8); color:var(--taupe); font-size:var(--fs-sm);">
-    © <?= date('Y') ?> <?= esc(setting('nama_warkop') ?? 'Warkop Bahagia') ?>
+    © <?= date('Y') ?> <?= esc(setting('nama_warkop') ?? 'Lower Manhattan Coffee Shop') ?>
 </footer>
 
 <script src="<?= base_url('assets/theme.js') ?>"></script>
 <script>
 // Confetti effect
-if (window.WarkopConfetti) {
-    window.WarkopConfetti();
+if (window.CoffeeShopConfetti) {
+    window.CoffeeShopConfetti();
 }
 
 // Polling status jika sedang menunggu pembayaran

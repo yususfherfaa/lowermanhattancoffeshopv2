@@ -1,7 +1,7 @@
 <?php
 $current_uri = uri_string();
-$namaWarkop = setting('nama_warkop') ?? 'Warkop Bahagia';
-$logoWarkop = setting('logo') ?? 'uploads/default-logo.png';
+$namaWarkop = setting('nama_warkop') ?? 'Lower Manhattan Coffee Shop';
+$logoWarkop = setting('logo') ?? 'uploads/manhattan-coffee-shop-logo.png';
 ?>
 <link rel="stylesheet" href="<?= base_url('assets/theme.css') ?>">
 <style>
@@ -25,11 +25,12 @@ $logoWarkop = setting('logo') ?? 'uploads/default-logo.png';
     color: var(--cream);
 }
 .admin-navbar .brand img {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    object-fit: cover;
+    width: 82px;
+    height: 50px;
+    border-radius: 7px;
+    object-fit: contain;
     border: 2px solid var(--nude);
+    background: #fff;
 }
 .admin-navbar .brand-name {
     font-family: var(--font-heading);
@@ -126,7 +127,7 @@ $logoWarkop = setting('logo') ?? 'uploads/default-logo.png';
 
 <nav class="admin-navbar">
     <a href="<?= base_url('admin/dashboard') ?>" class="brand">
-        <img src="<?= base_url($logoWarkop) ?>" alt="Logo" onerror="this.style.display='none'">
+        <img src="<?= base_url($logoWarkop) ?>" alt="Lower Manhattan Coffee Shop" onerror="this.style.display='none'">
         <span class="brand-name"><?= esc($namaWarkop) ?></span>
         <span class="brand-badge">Admin</span>
     </a>
@@ -161,6 +162,16 @@ $logoWarkop = setting('logo') ?? 'uploads/default-logo.png';
         <a href="<?= base_url('admin/recommendation-acceptance') ?>"
            class="nav-link <?= strpos($current_uri, 'recommendation-acceptance') !== false ? 'active' : '' ?>">
             Tingkat Penerimaan Rekomendasi
+        </a>
+
+        <a href="<?= base_url('admin/analitik-penjualan') ?>"
+           class="nav-link <?= strpos($current_uri, 'analitik-penjualan') !== false ? 'active' : '' ?>">
+            ☕ Analitik Penjualan
+        </a>
+
+        <a href="<?= base_url('admin/evaluasi-model') ?>"
+           class="nav-link <?= strpos($current_uri, 'evaluasi-model') !== false ? 'active' : '' ?>">
+            🤖 Evaluasi Model
         </a>
 
         <a href="<?= base_url('admin/settings') ?>"

@@ -1,7 +1,7 @@
 <?php
 $current_uri = uri_string();
-$namaWarkop = setting('nama_warkop') ?? 'Warkop Bahagia';
-$logoWarkop = setting('logo') ?? 'uploads/default-logo.png';
+$namaWarkop = setting('nama_warkop') ?? 'Lower Manhattan Coffee Shop';
+$logoWarkop = setting('logo') ?? 'uploads/manhattan-coffee-shop-logo.png';
 $namaKasir  = session()->get('nama_kasir') ?? 'Kasir';
 ?>
 <link rel="stylesheet" href="<?= base_url('assets/theme.css') ?>">
@@ -26,11 +26,12 @@ $namaKasir  = session()->get('nama_kasir') ?? 'Kasir';
     color: var(--cream);
 }
 .kasir-navbar .brand img {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    object-fit: cover;
+    width: 82px;
+    height: 50px;
+    border-radius: 7px;
+    object-fit: contain;
     border: 2px solid var(--nude);
+    background: #fff;
 }
 .kasir-navbar .brand-name {
     font-family: var(--font-heading);
@@ -163,7 +164,7 @@ $namaKasir  = session()->get('nama_kasir') ?? 'Kasir';
 
 <nav class="kasir-navbar">
     <a href="<?= base_url('kasir/dashboard') ?>" class="brand">
-        <img src="<?= base_url($logoWarkop) ?>" alt="Logo" onerror="this.style.display='none'">
+        <img src="<?= base_url($logoWarkop) ?>" alt="Lower Manhattan Coffee Shop" onerror="this.style.display='none'">
         <span class="brand-name"><?= esc($namaWarkop) ?></span>
         <span class="brand-badge">Kasir</span>
     </a>

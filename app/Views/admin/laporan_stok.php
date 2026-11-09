@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Laporan Stok — <?= esc(setting('nama_warkop') ?? 'Warkop Bahagia') ?></title>
+    <title>Laporan Stok — <?= esc(setting('nama_warkop') ?? 'Lower Manhattan Coffee Shop') ?></title>
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
     <link rel="stylesheet" href="<?= base_url('assets/theme.css') ?>">
     <style>
@@ -36,7 +36,7 @@
         color: var(--espresso) !important;
     }
     .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-        background: var(--terracotta) !important;
+        background: var(--button-success) !important;
         color: #fff !important;
         border: none !important;
         border-radius: var(--r-sm) !important;
@@ -74,10 +74,10 @@
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
         <div>
             <h1 style="margin:0;">Laporan Stok & Menu</h1>
-            <p class="text-muted" style="margin:4px 0 0 0;">Monitoring persediaan bahan dan stok menu di <?= esc(setting('nama_warkop') ?? 'Warkop Bahagia') ?></p>
+            <p class="text-muted" style="margin:4px 0 0 0;">Monitoring persediaan bahan dan stok menu di <?= esc(setting('nama_warkop') ?? 'Lower Manhattan Coffee Shop') ?></p>
         </div>
         <div>
-            <a href="<?= base_url('kasir/menu') ?>" class="btn btn-sm">
+            <a href="<?= base_url('kasir/menu') ?>" class="btn btn-neutral btn-sm">
                 ☕ Tambah / Kelola Menu
             </a>
         </div>
@@ -98,26 +98,78 @@
                 </tr>
             </thead>
             <tbody>
-                <?php foreach($produk as $p): ?>
+                <?php foreach(group_catalog_products_by_size($produk) as $menuGroup):
+                    $p = $menuGroup['product'];
+                    $imageProduct = $menuGroup['image_product'] ?? $p;
+                    $menuName = $menuGroup['name'];
+                    $sizeVariants = $menuGroup['variants'];
+                ?>
                 <tr>
                     <td style="text-align:center;">
-                        <img src="<?= base_url('uploads/'.$p['gambar']) ?>"
-                             alt="<?= esc($p['nama']) ?>"
+                        <img src="<?= product_image_url($imageProduct['gambar'] ?? null, $imageProduct['kategori_dataset'] ?? $imageProduct['kategori'] ?? null) ?>"
+                             alt="<?= esc($menuName) ?>"
                              style="width:48px; height:48px; object-fit:cover; border-radius:var(--r-sm); border:1px solid var(--sand);"
-                             onerror="this.src='<?= base_url('assets/noimage.png') ?>'">
+                             onerror="this.src='<?= base_url('assets/no-image.svg') ?>'">
                     </td>
-                    <td><code><?= esc($p['id_produk']) ?></code></td>
-                    <td><strong><?= esc($p['nama']) ?></strong></td>
-                    <td><?= esc($p['kategori']) ?></td>
-                    <td>Rp <?= number_format($p['harga'], 0, ',', '.') ?></td>
-                    <td style="font-weight:700;"><?= (int)$p['stok'] ?></td>
                     <td>
-                        <?php if($p['stok'] <= 0): ?>
-                            <span class="badge-stok habis">Habis (0)</span>
-                        <?php elseif($p['stok'] <= 5): ?>
-                            <span class="badge-stok menipis">Menipis (<?= (int) $p['stok'] ?>)</span>
+                        <?php if ($menuGroup['is_size_group']): ?>
+                            <?php foreach ($sizeVariants as $sizeVariant): ?>
+                                <div><code><?= esc($sizeVariant['product']['id_produk']) ?></code></div>
+                            <?php endforeach; ?>
                         <?php else: ?>
-                            <span class="badge-stok aman">Tersedia</span>
+                            <code><?= esc($p['id_produk']) ?></code>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <strong><?= esc($menuName) ?></strong>
+                        <?php if ($menuGroup['is_size_group']): ?>
+                            <?php foreach ($sizeVariants as $sizeVariant): ?>
+                                <div><?= esc($sizeVariant['label']) ?></div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td><?= esc($p['kategori']) ?></td>
+                    <td>
+                        <?php if ($menuGroup['is_size_group']): ?>
+                            <?php foreach ($sizeVariants as $sizeVariant): ?>
+                                <div>Rp <?= number_format($sizeVariant['product']['harga'], 0, ',', '.') ?></div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            Rp <?= number_format($p['harga'], 0, ',', '.') ?>
+                        <?php endif; ?>
+                    </td>
+                    <td style="font-weight:700;">
+                        <?php if ($menuGroup['is_size_group']): ?>
+                            <?php foreach ($sizeVariants as $sizeVariant): ?>
+                                <div><?= (int) $sizeVariant['product']['stok'] ?></div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <?= (int) $p['stok'] ?>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <?php if ($menuGroup['is_size_group']): ?>
+                            <?php foreach ($sizeVariants as $sizeVariant):
+                                $stock = (int) $sizeVariant['product']['stok'];
+                            ?>
+                                <div>
+                                    <?php if ($stock <= 0): ?>
+                                        <span class="badge-stok habis">Habis (0)</span>
+                                    <?php elseif ($stock <= 5): ?>
+                                        <span class="badge-stok menipis">Menipis (<?= $stock ?>)</span>
+                                    <?php else: ?>
+                                        <span class="badge-stok aman">Tersedia</span>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <?php if ($p['stok'] <= 0): ?>
+                                <span class="badge-stok habis">Habis (0)</span>
+                            <?php elseif ($p['stok'] <= 5): ?>
+                                <span class="badge-stok menipis">Menipis (<?= (int) $p['stok'] ?>)</span>
+                            <?php else: ?>
+                                <span class="badge-stok aman">Tersedia</span>
+                            <?php endif; ?>
                         <?php endif; ?>
                     </td>
                 </tr>
@@ -130,7 +182,7 @@
 </div>
 
 <footer style="text-align:center; padding:var(--sp-8); color:var(--taupe); font-size:var(--fs-sm);">
-    © <?= date('Y') ?> <?= esc(setting('nama_warkop') ?? 'Warkop Bahagia') ?>
+    © <?= date('Y') ?> <?= esc(setting('nama_warkop') ?? 'Lower Manhattan Coffee Shop') ?>
 </footer>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>

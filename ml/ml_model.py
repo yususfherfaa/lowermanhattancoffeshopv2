@@ -1,7 +1,7 @@
 """
 ml_model.py
 ===========
-Pipeline Machine Learning - Sistem Rekomendasi Menu Warkop Bahagia
+Pipeline Machine Learning - Rekomendasi Menu Lower Manhattan Coffee Shop
 Algoritma : K-Nearest Neighbor (NearestNeighbors - Nearest-based Item Aggregation)
 Fitur     : sin dan cos dari (jam + menit / 60) dengan periode 24 jam
 Target    : Rekomendasi Top-5 menu berbasis kedekatan waktu
@@ -44,10 +44,10 @@ LOW_CONFIDENCE_THRESHOLD = 150
 
 # ── 1. LOAD DATASET ───────────────────────────────────────────────────────────
 print("=" * 65)
-print("  PIPELINE ML REKOMENDASI WARKOP BAHAGIA (PR-01)")
+print("  PIPELINE ML LOWER MANHATTAN COFFEE SHOP (PR-01)")
 print("=" * 65)
 
-parser = argparse.ArgumentParser(description='Evaluasi model rekomendasi Warkop Bahagia')
+parser = argparse.ArgumentParser(description='Evaluasi model Lower Manhattan Coffee Shop')
 parser.add_argument('--sumber', choices=('csv', 'db'), default='csv')
 args = parser.parse_args()
 source_label = 'sintetis'
@@ -470,7 +470,7 @@ env_versions = (
 )
 
 hasil_evaluasi_text = f"""================================================================================
-HASIL EVALUASI MODEL KNN (REKOMENDASI BERBASIS WAKTU) - WARKOP BAHAGIA
+HASIL EVALUASI MODEL KNN (REKOMENDASI BERBASIS WAKTU) - LOWER MANHATTAN COFFEE SHOP
 ================================================================================
 
 1. INFORMASI LINGKUNGAN SISTEM
@@ -541,7 +541,7 @@ Confusion Matrix:
 
 Catatan:
 Perbandingan terhadap aturan manual pemilik menunjukkan seberapa konsisten
-pola rekomendasi model dengan intuisi awal pemilik warkop. Namun, presisi aturan
+pola rekomendasi model dengan intuisi awal pemilik kedai kopi. Namun, presisi aturan
 manual bersifat sirkular karena data sintetis di-generate menggunakan bobot awal
 yang diturunkan dari slot aturan pemilik tersebut.
 

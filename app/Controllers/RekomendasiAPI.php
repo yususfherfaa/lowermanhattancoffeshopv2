@@ -42,11 +42,25 @@ class RekomendasiAPI extends BaseController
             }
 
             $db = \Config\Database::connect();
-            $inserted = $db->table('recommendation_logs')->insert([
+            $logPayload = [
                 'jam' => max(0, min(23, (int) ($data['jam'] ?? date('G')))),
                 'source' => substr((string) ($data['source'] ?? 'unknown'), 0, 64),
                 'menu_ditampilkan' => json_encode($ids, JSON_UNESCAPED_SLASHES),
-            ]);
+            ];
+
+            // Tambahkan kolom Plan B jika kolom ada di tabel
+            $fields = $db->getFieldNames('recommendation_logs');
+            if (in_array('sumber_model', $fields, true)) {
+                $logPayload['sumber_model'] = substr((string) ($data['sumber_model'] ?? 'public_dataset'), 0, 50);
+            }
+            if (in_array('label_keramaian', $fields, true)) {
+                $logPayload['label_keramaian'] = substr((string) ($data['label_keramaian'] ?? 'sedang'), 0, 20);
+            }
+            if (in_array('versi_model', $fields, true)) {
+                $logPayload['versi_model'] = substr((string) ($data['versi_model'] ?? '2.0.0-planB'), 0, 30);
+            }
+
+            $inserted = $db->table('recommendation_logs')->insert($logPayload);
             if (!$inserted) {
                 return null;
             }
@@ -63,6 +77,7 @@ class RekomendasiAPI extends BaseController
     public function index()
     {
         $jamParam = $this->request->getGet('jam');
+        $menitParam = $this->request->getGet('menit');
         if ($jamParam !== null && $jamParam !== '') {
             $jam = (int) $jamParam;
             if ($jam < 0 || $jam > 23) {
@@ -73,10 +88,22 @@ class RekomendasiAPI extends BaseController
                     ])
                     ->setStatusCode(400);
             }
-            return $this->getRekomendasiByJam($jam);
         }
 
-        return $this->getRekomendasiByJam(null);
+        $menit = null;
+        if ($menitParam !== null && $menitParam !== '') {
+            $menit = filter_var($menitParam, FILTER_VALIDATE_INT);
+            if ($menit === false || $menit < 0 || $menit > 59) {
+                return $this->response
+                    ->setJSON([
+                        'status' => 'error',
+                        'message' => 'Menit tidak valid. Gunakan angka 0-59.',
+                    ])
+                    ->setStatusCode(400);
+            }
+        }
+
+        return $this->getRekomendasiByJam(isset($jam) ? $jam : null, $menit);
     }
 
     /**
@@ -110,20 +137,30 @@ class RekomendasiAPI extends BaseController
             if (($it['tipe'] ?? 'menu') === 'kelompok' && !empty($it['anggota'])) {
                 $it['anggota'] = $this->enrichGambar($it['anggota']);
                 $first = $it['anggota'][0];
-                foreach (['id_produk','nama','kategori','harga','deskripsi','gambar','stok','varian_suhu','tambahan_harga_es','suhu_tetap','punya_opsi','label_opsi','options'] as $key) {
+                foreach (['id_produk','nama','kategori','kategori_dataset','tipe_dataset','harga','deskripsi','gambar','stok','varian_suhu','tambahan_harga_es','suhu_tetap','punya_opsi','label_opsi','options'] as $key) {
                     $it[$key] = $first[$key] ?? ($it[$key] ?? null);
                 }
                 continue;
             }
 
+            $select = 'nama, kategori, harga, deskripsi, gambar, stok, varian_suhu, tambahan_harga_es, suhu_tetap, punya_opsi, label_opsi';
+            foreach (['kategori_dataset', 'tipe_dataset', 'ukuran'] as $field) {
+                if ($db->fieldExists($field, 'products')) {
+                    $select .= ', ' . $field;
+                }
+            }
             $row = $db->table('products')
-                ->select('nama, kategori, harga, deskripsi, gambar, stok, varian_suhu, tambahan_harga_es, suhu_tetap, punya_opsi, label_opsi')
+                ->select($select)
                 ->where('id_produk', $it['id_produk'] ?? '')
                 ->get()->getRowArray();
 
             if ($row) {
-                $it['nama'] = $row['nama'];
+                $it['nama'] = catalog_product_display_name($row);
+                $it['ukuran'] = $row['ukuran'] ?? null;
+                $it['ukuran_label'] = catalog_product_size_label($row);
                 $it['kategori'] = $row['kategori'];
+                $it['kategori_dataset'] = $row['kategori_dataset'] ?? $it['kategori_dataset'] ?? $row['kategori'];
+                $it['tipe_dataset'] = $row['tipe_dataset'] ?? $it['tipe_dataset'] ?? null;
                 $it['harga'] = (float) $row['harga'];
                 $it['deskripsi'] = $row['deskripsi'] ?? '';
                 $it['varian_suhu'] = (int) $row['varian_suhu'];
@@ -140,9 +177,10 @@ class RekomendasiAPI extends BaseController
                         ->getResultArray()
                     : [];
             }
-            $it['gambar'] = !empty($row['gambar'])
-                ? base_url('uploads/' . $row['gambar'])
-                : base_url('assets/no-image.svg');
+            $it['gambar'] = product_image_url(
+                $row['gambar'] ?? null,
+                $it['kategori_dataset'] ?? $it['kategori'] ?? null
+            );
             $it['stok'] = isset($row['stok']) ? (int) $row['stok'] : null;
         }
         unset($it);
@@ -162,6 +200,12 @@ class RekomendasiAPI extends BaseController
                 if ($item['anggota'] === []) {
                     continue;
                 }
+                $hasil[] = $item;
+                continue;
+            }
+
+            if (!empty($item['kategori_dataset'])) {
+                $item['kategori_rekomendasi'] = $item['kategori_dataset'];
                 $hasil[] = $item;
                 continue;
             }
@@ -198,18 +242,17 @@ class RekomendasiAPI extends BaseController
     /**
      * Core: request ke Flask API server (localhost:5001) dan return JSON.
      */
-    private function getRekomendasiByJam($jam)
+    private function getRekomendasiByJam(?int $jam, ?int $menit = null)
     {
-        $hasil = (new FlaskRecommendationClient())->fetch($jam);
+        $hasil = (new FlaskRecommendationClient())->fetch($jam, $menit);
         if ($hasil === null) {
-            // Fallback: gunakan rule-based jika Flask tidak tersedia
-            return $this->fallbackRuleBased($jam);
+            return $this->fallbackRuleBased($jam, $menit);
         }
 
         $kepercayaan = $hasil['data']['kepercayaan'] ?? null;
         if (is_numeric($kepercayaan)
             && $kepercayaan < \Config\Recommendation::LOW_CONFIDENCE_THRESHOLD) {
-            return $this->fallbackRuleBased($jam, 'rule-based-jam-sepi');
+            return $this->fallbackRuleBased($jam, $menit, 'dataset-lower-manhattan');
         }
 
         if (isset($hasil['data']['rekomendasi']) && is_array($hasil['data']['rekomendasi'])) {
@@ -226,76 +269,110 @@ class RekomendasiAPI extends BaseController
      * Fallback rule-based jika Python/model tidak tersedia.
      * Tetap memberikan rekomendasi tanpa ML.
      */
-    private function fallbackRuleBased($jam = null, string $source = 'rule-based')
+    private function fallbackRuleBased($jam = null, ?int $menit = null, string $source = 'dataset-lower-manhattan')
     {
-        $now    = new \DateTime('now', new \DateTimeZone('Asia/Jakarta'));
-        $jam    = $jam ?? (int) $now->format('H');
-        $hari   = (int) $now->format('N') - 1; // 0=Senin
-        $namaHari = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'][$hari];
+        $now = new \DateTime('now', new \DateTimeZone('Asia/Jakarta'));
+        $jam = $jam ?? (int) $now->format('H');
+        $menit = $menit ?? (int) $now->format('i');
+        $hari = (int) $now->format('N') - 1;
+        $namaHari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'][$hari];
 
-        $slotMenu = fn($rank, $id, $suhu = null) => ['peringkat' => $rank, 'tipe' => 'menu', 'id_produk' => $id, 'suhu_default' => $suhu];
-        $slotKelompok = function ($rank, $nama, $ids, $suhu = null) {
-            $idKopi = ['PRD0000023','PRD0000024','PRD0000025','PRD0000031','PRD0000032','PRD0000033','PRD0000034','PRD0000035','PRD0000036','PRD0000037','PRD0000038','PRD0000039','PRD0000040','PRD0000041'];
-            $isMinuman = str_contains(strtolower($nama), 'minuman') || str_contains(strtolower($nama), 'kopi') || str_contains(strtolower($nama), 'segar');
-            return [
-                'peringkat' => $rank, 'tipe' => 'kelompok', 'nama_kelompok' => $nama, 'nama' => $nama,
-                'anggota' => array_map(fn($id) => [
-                    'id_produk' => $id,
-                    'subkategori' => $isMinuman ? (in_array($id, $idKopi, true) ? 'Kopi' : 'Non Kopi') : null,
-                ], $ids),
-                'suhu_default' => $suhu,
+        if ($jam < 6 || $jam > 20) {
+            $data = [
+                'jam' => $jam,
+                'menit' => $menit,
+                'segmen' => 'di_luar_operasional',
+                'emoji' => '💤',
+                'hari' => $namaHari,
+                'source' => 'luar-jam-operasional',
+                'sumber_model' => 'public_dataset',
+                'rentang_segmen' => '06.00-20.59',
+                'total_rekomendasi' => 0,
+                'rekomendasi' => [],
+                'pesan' => 'Lower Manhattan Coffee Shop beroperasi pukul 06:00 s.d. 21:00 WIB. Silakan kembali pada jam operasional.',
             ];
-        };
-
-        if ($jam >= 5 && $jam <= 10) {
-            $segmen = 'pagi'; $suhuDefault = 'panas'; $rentang = '05.00-10.59';
-            $rekomendasi = [
-                $slotMenu(1, 'PRD0000026', 'panas'), $slotMenu(2, 'PRD0000027', 'panas'),
-                $slotMenu(3, 'PRD0000028', 'panas'), $slotMenu(4, 'PRD0000029', 'panas'),
-                $slotKelompok(5, 'Minuman Panas', ['PRD0000031','PRD0000032','PRD0000033','PRD0000034','PRD0000035','PRD0000036','PRD0000016','PRD0000017','PRD0000018','PRD0000019','PRD0000021'], 'panas'),
-            ];
-        } elseif ($jam >= 11 && $jam <= 14) {
-            $segmen = 'siang'; $suhuDefault = 'es'; $rentang = '11.00-14.59';
-            $rekomendasi = [
-                $slotMenu(1, 'PRD0000030', 'es'), $slotMenu(2, 'PRD0000002', 'es'),
-                $slotKelompok(3, 'Minuman Dingin', ['PRD0000037','PRD0000038','PRD0000039','PRD0000040','PRD0000041','PRD0000042','PRD0000016','PRD0000017','PRD0000018','PRD0000019','PRD0000021'], 'es'),
-                $slotKelompok(4, 'Nasi Kucing & Sate-satean', ['PRD0000005','PRD0000013','PRD0000014','PRD0000015']),
-                $slotKelompok(5, 'Gorengan', ['PRD0000009','PRD0000010','PRD0000011']),
-            ];
-        } elseif ($jam >= 15 && $jam <= 17) {
-            $segmen = 'sore'; $suhuDefault = null; $rentang = '15.00-17.59';
-            $rekomendasi = [
-                $slotMenu(1, 'PRD0000006'), $slotMenu(2, 'PRD0000007'),
-                $slotMenu(3, 'PRD0000008'), $slotMenu(4, 'PRD0000012'),
-            ];
-        } else {
-            $segmen = 'malam'; $suhuDefault = 'es'; $rentang = '18.00-04.59';
-            $rekomendasi = [
-                $slotMenu(1, 'PRD0000003'), $slotMenu(2, 'PRD0000004'), $slotMenu(3, 'PRD0000001'),
-                $slotKelompok(4, 'Minuman Dingin', ['PRD0000037','PRD0000038','PRD0000039','PRD0000040','PRD0000041','PRD0000042','PRD0000016','PRD0000017','PRD0000018','PRD0000019','PRD0000021'], 'es'),
-                $slotKelompok(5, 'Gorengan', ['PRD0000009','PRD0000010','PRD0000011']),
-            ];
+            return $this->response->setJSON(['status' => 'success', 'data' => $data]);
         }
 
-        $emojiSegmen = [
-            'pagi'  => '🌅',
-            'siang' => '☀️',
-            'sore'  => '🌤️',
-            'malam' => '🌙',
-        ];
+        if ($jam <= 10) {
+            $segmen = 'pagi';
+            $rentang = '06.00-10.59';
+        } elseif ($jam <= 14) {
+            $segmen = 'siang';
+            $rentang = '11.00-14.59';
+        } elseif ($jam <= 17) {
+            $segmen = 'sore';
+            $rentang = '15.00-17.59';
+        } else {
+            $segmen = 'malam';
+            $rentang = '18.00-20.59';
+        }
 
-        // Enrich gambar & stok dari database
+        $db = \Config\Database::connect();
+        $popularityPath = ROOTPATH . 'ml/config/popularitas_segmen.json';
+        if (!is_file($popularityPath)) {
+            throw new \RuntimeException('Artefak popularitas per segmen dari dataset Lower Manhattan tidak ditemukan.');
+        }
+        $popularityJson = file_get_contents($popularityPath);
+        $popularityBySegment = $popularityJson === false ? null : json_decode($popularityJson, true);
+        if (!is_array($popularityBySegment) || !isset($popularityBySegment[$segmen]) || !is_array($popularityBySegment[$segmen])) {
+            throw new \RuntimeException("Data popularitas dataset untuk segmen {$segmen} tidak valid.");
+        }
+
+        $builder = $db->table('products');
+        if ($db->fieldExists('aktif', 'products')) {
+            $builder->where('aktif', 1);
+        }
+        $hasDatasetProducts = $db->table('products')->like('id_produk', 'PRDM%')->countAllResults() > 0;
+        if ($hasDatasetProducts) {
+            $builder->like('id_produk', 'PRDM%');
+        }
+        $orderField = $db->fieldExists('kode_produk_dataset', 'products') ? 'kode_produk_dataset' : 'id_produk';
+        $products = $builder->orderBy($orderField, 'ASC')->get()->getResultArray();
+        if (!$products && $hasDatasetProducts) {
+            throw new \RuntimeException('Produk dataset Lower Manhattan aktif tidak ditemukan untuk rekomendasi fallback.');
+        }
+
+        $productsById = [];
+        foreach ($products as $product) {
+            if ((int) ($product['stok'] ?? 0) <= 0) {
+                continue;
+            }
+            $productsById[(string) $product['id_produk']] = $product;
+        }
+
+        $rekomendasi = [];
+        foreach ($popularityBySegment[$segmen] as $datasetProduct) {
+            $productId = 'PRDM' . str_pad((string) ($datasetProduct['product_id'] ?? ''), 4, '0', STR_PAD_LEFT);
+            $product = $productsById[$productId] ?? null;
+            if ($product === null) {
+                continue;
+            }
+
+            $rekomendasi[] = [
+                'peringkat' => count($rekomendasi) + 1,
+                'tipe' => 'menu',
+                'id_produk' => $productId,
+                'kategori' => $product['kategori'],
+                'kategori_dataset' => $product['kategori_dataset'] ?? $product['kategori'],
+            ];
+            if (count($rekomendasi) >= 5) {
+                break;
+            }
+        }
+
         $rekomendasi = $this->enrichGambar($rekomendasi);
         $rekomendasi = $this->formatKategoriRekomendasi($rekomendasi, $segmen);
-
+        $emojiSegmen = ['pagi' => '🌅', 'siang' => '☀️', 'sore' => '🌤️', 'malam' => '🌙'];
         $data = [
             'jam' => $jam,
+            'menit' => $menit,
             'segmen' => $segmen,
             'emoji' => $emojiSegmen[$segmen],
             'hari' => $namaHari,
             'source' => $source,
+            'sumber_model' => 'public_dataset',
             'rentang_segmen' => $rentang,
-            'suhu_default' => $suhuDefault,
             'total_rekomendasi' => count($rekomendasi),
             'rekomendasi' => $rekomendasi,
         ];

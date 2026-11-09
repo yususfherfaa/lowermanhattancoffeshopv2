@@ -77,7 +77,7 @@ class DetailPesanan extends BaseController
 
                 'nama_warkop' =>
                     $settings['nama_warkop']
-                    ?? 'Warkop Bahagia'
+                    ?? 'Lower Manhattan Coffee Shop'
             ]
         );
     }

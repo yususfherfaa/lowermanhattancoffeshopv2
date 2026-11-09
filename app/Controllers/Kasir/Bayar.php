@@ -42,7 +42,7 @@ class Bayar extends BaseController
         $data = [
             'order' => $order,
             'items' => $items,
-            'nama_warkop' => $settings['nama_warkop'] ?? 'Warkop Bahagia'
+            'nama_warkop' => $settings['nama_warkop'] ?? 'Lower Manhattan Coffee Shop'
         ];
 
         return view('kasir/bayar', $data);

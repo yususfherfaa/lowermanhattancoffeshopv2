@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Pembayaran Pesanan #<?= esc($order['id_order']) ?> — <?= esc(setting('nama_warkop') ?? 'Warkop Bahagia') ?></title>
+    <title>Pembayaran Pesanan #<?= esc($order['id_order']) ?> — <?= esc(setting('nama_warkop') ?? 'Lower Manhattan Coffee Shop') ?></title>
     <link rel="stylesheet" href="<?= base_url('assets/theme.css') ?>">
     <style>
     .pay-card {
@@ -158,7 +158,25 @@
             <tbody>
                 <?php foreach($items as $it): ?>
                 <tr>
-                    <td><strong><?= esc($it['nama']) ?></strong></td>
+                    <td>
+                        <?php
+                            $ukuranLabel = catalog_product_size_label($it);
+                            $namaMenu = catalog_product_display_name($it);
+                        ?>
+                        <strong><?= esc($namaMenu) ?></strong>
+                        <?php if ($ukuranLabel !== null): ?>
+                            <small style="display:block;color:var(--taupe);">Ukuran: <?= esc($ukuranLabel) ?></small>
+                        <?php endif; ?>
+                        <?php if (!empty($it['opsi'])): ?>
+                            <div style="margin-top:3px;color:var(--terracotta);font-size:var(--fs-xs);">Varian: <?= esc($it['opsi']) ?></div>
+                        <?php endif; ?>
+                        <?php if (!empty($it['catatan'])): ?>
+                            <div style="margin-top:3px;color:var(--espresso);font-size:var(--fs-xs);"><strong>Catatan:</strong> <?= esc($it['catatan']) ?></div>
+                        <?php endif; ?>
+                        <?php if (!empty($it['suhu'])): ?>
+                            <div style="margin-top:3px;color:var(--taupe);font-size:var(--fs-xs);"><?= $it['suhu'] === 'panas' ? 'Panas' : 'Es' ?></div>
+                        <?php endif; ?>
+                    </td>
                     <td style="text-align:right;">Rp <?= number_format($it['harga'], 0, ',', '.') ?></td>
                     <td style="text-align:center;"><?= esc($it['qty']) ?></td>
                     <td style="text-align:right; font-weight:600;">Rp <?= number_format($it['subtotal'], 0, ',', '.') ?></td>
@@ -244,7 +262,7 @@
 </div>
 
 <footer style="text-align:center; padding:var(--sp-8); color:var(--taupe); font-size:var(--fs-sm);">
-    © <?= date('Y') ?> <?= esc(setting('nama_warkop') ?? 'Warkop Bahagia') ?>
+    © <?= date('Y') ?> <?= esc(setting('nama_warkop') ?? 'Lower Manhattan Coffee Shop') ?>
 </footer>
 
 <script src="<?= base_url('assets/theme.js') ?>"></script>

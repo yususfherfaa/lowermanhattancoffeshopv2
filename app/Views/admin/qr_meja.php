@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Generate QR Meja — <?= esc(setting('nama_warkop') ?? 'Warkop Bahagia') ?></title>
+    <title>Generate QR Meja — <?= esc(setting('nama_warkop') ?? 'Lower Manhattan Coffee Shop') ?></title>
     <link rel="stylesheet" href="<?= base_url('assets/theme.css') ?>">
     <style>
     .qr-grid {
@@ -120,12 +120,19 @@
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
         <div>
             <h1 style="margin:0;">Generate QR Code Meja</h1>
-            <p class="text-muted" style="margin:4px 0 0 0;">Cetak kartu meja (tent card) agar pelanggan dapat langsung memesan.</p>
+            <p class="text-muted" style="margin:4px 0 0 0;">Cetak kartu meja (tent card) agar pelanggan dapat langsung memesan dari meja.</p>
         </div>
         <div class="page-header-actions">
-            <button onclick="window.print()" class="btn btn-sm" style="display:inline-flex; align-items:center; gap:6px;">
+            <button onclick="window.print()" class="btn btn-neutral btn-sm" style="display:inline-flex; align-items:center; gap:6px;">
                 🖨️ Cetak Semua QR Meja
             </button>
+        </div>
+    </div>
+
+    <div style="background:var(--sand); border:1px solid var(--beige); border-radius:var(--r-lg); padding:12px 18px; margin-top:var(--sp-4); display:flex; align-items:center; gap:12px; font-size:var(--fs-sm); color:var(--espresso);">
+        <span style="font-size:22px; flex-shrink:0;">💡</span>
+        <div>
+            <strong>Panduan Meja:</strong> Cetak QR dan letakkan pada tent card masing-masing nomor meja. Pelanggan cukup memindai dengan kamera HP tanpa perlu mengunduh aplikasi untuk memesan langsung.
         </div>
     </div>
 
@@ -134,8 +141,11 @@
         <?php foreach($meja as $m): ?>
 
             <?php
-            $url = 'http://' . $serverUrl . '/order/' . $m['id_meja'];
-            $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=' . urlencode($url);
+            $cleanHost = preg_replace('/^https?:\/\//i', '', trim($serverUrl));
+            $cleanHost = preg_replace('/[^\w\.\:\-\/]/', '', $cleanHost);
+            $tableId = rawurlencode($m['id_meja']);
+            $url = $cleanHost !== '' ? 'http://' . $cleanHost . '/order/' . $tableId : base_url('order/' . $tableId);
+            $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=' . rawurlencode($url);
             ?>
 
             <div class="tent-card">
@@ -175,7 +185,7 @@
 </div>
 
 <footer style="text-align:center; padding:var(--sp-8); color:var(--taupe); font-size:var(--fs-sm);">
-    © <?= date('Y') ?> <?= esc(setting('nama_warkop') ?? 'Warkop Bahagia') ?>
+    © <?= date('Y') ?> <?= esc(setting('nama_warkop') ?? 'Lower Manhattan Coffee Shop') ?>
 </footer>
 
 <script src="<?= base_url('assets/theme.js') ?>"></script>

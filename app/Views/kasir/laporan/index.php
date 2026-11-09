@@ -4,7 +4,7 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Laporan Penjualan — <?= esc(setting('nama_warkop') ?? 'Warkop Bahagia') ?></title>
+    <title>Laporan Penjualan — <?= esc(setting('nama_warkop') ?? 'Lower Manhattan Coffee Shop') ?></title>
     <link rel="stylesheet" href="<?= base_url('assets/theme.css') ?>">
     <style>
         .filter-card {
@@ -75,7 +75,7 @@
             color: var(--espresso) !important;
         }
         .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-            background: var(--terracotta) !important;
+            background: var(--button-success) !important;
             color: #fff !important;
             border: none !important;
             border-radius: var(--r-sm) !important;
@@ -112,7 +112,7 @@
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:var(--sp-4);">
         <div>
             <h1 style="margin:0;">Laporan Penjualan</h1>
-            <p class="text-muted" style="margin:4px 0 0 0;">Rekapitulasi transaksi pemesanan dan omzet <?= esc(setting('nama_warkop') ?? 'Warkop Bahagia') ?></p>
+            <p class="text-muted" style="margin:4px 0 0 0;">Rekapitulasi transaksi pemesanan dan omzet <?= esc(setting('nama_warkop') ?? 'Lower Manhattan Coffee Shop') ?></p>
         </div>
     </div>
 
@@ -144,14 +144,18 @@
             <?php endif; ?>
 
             <div style="align-self:flex-end;">
-                <button type="submit" class="btn btn-sm" style="padding:10px 18px;">
+                <button type="submit" class="btn btn-filter btn-sm" style="padding:10px 18px;">
                     🔍 Terapkan Filter
                 </button>
             </div>
 
             <div style="align-self:flex-end;">
-                <a href="<?= base_url('laporan/pdf?from='.$from.'&to='.$to.'&id_user='.$id_user) ?>"
-                   class="btn btn-sm"
+                <a href="<?= esc(base_url('laporan/pdf?' . http_build_query([
+                    'from' => $from,
+                    'to' => $to,
+                    'id_user' => $id_user,
+                ])), 'attr') ?>"
+                   class="btn btn-neutral btn-sm"
                    style="background:var(--sand); color:var(--espresso); border:1px solid var(--beige); padding:10px 18px;">
                     📄 Unduh Rekap PDF
                 </a>
@@ -210,7 +214,7 @@
 </div>
 
 <footer style="text-align:center; padding:var(--sp-8); color:var(--taupe); font-size:var(--fs-sm);">
-    © <?= date('Y') ?> <?= esc(setting('nama_warkop') ?? 'Warkop Bahagia') ?>
+    © <?= date('Y') ?> <?= esc(setting('nama_warkop') ?? 'Lower Manhattan Coffee Shop') ?>
 </footer>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
