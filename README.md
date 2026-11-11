@@ -13,10 +13,10 @@ Aplikasi pemesanan dan kasir berbasis CodeIgniter 4 untuk katalog Maven Roasters
 
 1. Pasang dependensi PHP: `composer install`.
 2. Salin `.env.example` menjadi `.env`, lalu atur environment, URL aplikasi, dan kredensial database. Jangan commit `.env`.
-3. Buat database kosong, misalnya `warkop_bahagia`, kemudian impor skema:
+3. Buat database kosong, misalnya `lowermanhattancoffeshopp`, kemudian impor skema:
 
    ```sh
-   mysql -u root -p warkop_bahagia < database/schema.sql
+   mysql -u root -p lowermanhattancoffeshopp < database/schema.sql
    ```
 
 4. Jalankan migrasi CodeIgniter yang tersedia: `php spark migrate`.
@@ -136,7 +136,7 @@ Buat pengguna khusus aplikasi, bukan `root`. Jalankan perintah berikut melalui k
 
 ```sql
 CREATE USER 'warkop_app'@'localhost' IDENTIFIED BY 'GANTI_DENGAN_PASSWORD_KUAT';
-GRANT ALL PRIVILEGES ON `warkop_bahagia`.* TO 'warkop_app'@'localhost';
+GRANT ALL PRIVILEGES ON `lowermanhattancoffeshopp`.* TO 'warkop_app'@'localhost';
 ```
 
 Atur pengguna dan kata sandi yang sama pada `.env` lokal. Berkas `.env.example` tidak berisi rahasia; `.env` tetap dikecualikan oleh `.gitignore`.

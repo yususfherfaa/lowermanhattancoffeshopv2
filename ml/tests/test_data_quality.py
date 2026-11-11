@@ -12,17 +12,7 @@ PROCESSED_CSV = os.path.join(PROJECT_ROOT, 'ml', 'data', 'processed', 'dataset_b
 PROFIL_JSON = os.path.join(PROJECT_ROOT, 'ml', 'data', 'profil_dataset.json')
 CATALOG_SQL = os.path.join(PROJECT_ROOT, 'database', 'planB', '02_seed_katalog.sql')
 AGGREGATE_SQL = os.path.join(PROJECT_ROOT, 'database', 'planB', '03_seed_agregat.sql')
-IMAGE_BY_CATEGORY = {
-    'Bakery': 'bakery.svg',
-    'Branded': 'branded.svg',
-    'Coffee': '1782892671_5d17140debb9adc1a0f7.jpg',
-    'Coffee beans': '1782893018_3852702b5d883e8b42a6.jpg',
-    'Drinking Chocolate': '1782892953_7355e2cffff88b69963b.png',
-    'Flavours': 'flavours.svg',
-    'Loose Tea': '1782892849_cca365c575d52226cdfc.jpeg',
-    'Packaged Chocolate': 'packaged-chocolate.svg',
-    'Tea': '1782892739_5710e7e00431f6e601b9.jpg',
-}
+PRODUCT_IMAGE_PATTERN = re.compile(r"foto-produk-PRDM\d{4}\.(?:jpg|webp)")
 EXPECTED_CATEGORIES = {
     'Bakery',
     'Branded',
@@ -84,10 +74,20 @@ def test_exported_catalog_has_all_products_categories_and_images():
     assert len(expected_ids) == 80
     assert "WHERE `id_produk` NOT IN (" in catalog_sql
 
-    for category, image in IMAGE_BY_CATEGORY.items():
+    for category in EXPECTED_CATEGORIES:
         assert f"'{category}', '{category}'" in catalog_sql
-        assert f"'{image}'" in catalog_sql
-        assert os.path.isfile(os.path.join(PROJECT_ROOT, 'public', 'uploads', image))
+
+    # Seed katalog terbaru memberi setiap produk satu berkas foto-produk-PRDMxxxx.
+    # Beberapa produk berbagi foto, jadi jumlah berkas unik boleh kurang dari 80.
+    product_rows = re.findall(r"^\('PRDM\d{4}',[^\n]*$", catalog_sql, flags=re.MULTILINE)
+    assert len(product_rows) == 80
+    images = set()
+    for row in product_rows:
+        match = PRODUCT_IMAGE_PATTERN.search(row)
+        assert match, f"Baris produk tanpa foto-produk-PRDM: {row[:60]}"
+        images.add(match.group(0))
+    for image in sorted(images):
+        assert os.path.isfile(os.path.join(PROJECT_ROOT, 'public', 'uploads', image)), image
 
     with open(AGGREGATE_SQL, 'r', encoding='utf-8') as file:
         aggregate_sql = file.read()

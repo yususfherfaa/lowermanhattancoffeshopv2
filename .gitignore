@@ -61,7 +61,7 @@ venv/
 # Database exports and recovery dumps (keep schema and migration SQL)
 *.sql
 !/database/*.sql
-!/database/planB/02_seed_katalog.sql
+!/database/planB/*.sql
 *.sql.dump
 *.sql.gz
 *.backup.sql
